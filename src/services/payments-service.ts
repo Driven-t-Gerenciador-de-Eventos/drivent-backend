@@ -1,6 +1,8 @@
 import { invalidDataError, notFoundError, unauthorizedError } from '@/errors';
 import { CardPaymentParams, PaymentParams } from '@/protocols';
 import { enrollmentRepository, paymentsRepository, ticketsRepository } from '@/repositories';
+import { prisma } from '@/config';
+import { PrismaPromise, TicketStatus } from '@prisma/client';
 
 async function verifyTicketAndEnrollment(userId: number, ticketId: number) {
   if (!ticketId || isNaN(ticketId)) throw invalidDataError('ticketId');
@@ -32,8 +34,16 @@ async function paymentProcess(ticketId: number, userId: number, cardData: CardPa
     cardLastDigits: cardData.number.toString().slice(-4),
   };
 
-  const payment = await paymentsRepository.createPayment(ticketId, paymentData);
-  await ticketsRepository.ticketProcessPayment(ticketId);
+  const payment = paymentsRepository.createPayment(ticketId, paymentData);
+  const processPayment = ticketsRepository.ticketProcessPayment(ticketId);
+  //transaction na camada de service pois são independentes
+
+  try {
+    await prisma.$transaction([payment, processPayment]);
+  } catch (error) {
+    console.log(error)
+  };
+  
   return payment;
 }
 

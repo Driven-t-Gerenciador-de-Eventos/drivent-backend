@@ -1,5 +1,6 @@
 import { Enrollment } from '@prisma/client';
 import { prisma } from '@/config';
+import { CreateAddressParams, UpdateAddressParams } from './address-repository';
 
 async function findWithAddressByUserId(userId: number) {
   return prisma.enrollment.findFirst({
@@ -10,17 +11,28 @@ async function findWithAddressByUserId(userId: number) {
   });
 }
 
-async function upsert(
+function upsert(
   userId: number,
   createdEnrollment: CreateEnrollmentParams,
   updatedEnrollment: UpdateEnrollmentParams,
+  createdAddress: CreateAddressParams,
+  updatedAddress: UpdateAddressParams,
 ) {
   return prisma.enrollment.upsert({
     where: {
       userId,
     },
-    create: createdEnrollment,
-    update: updatedEnrollment,
+    create: {createdEnrollment, Address: {
+      create: {
+        ...createdAddress,
+      }
+    }},
+    update: {updatedEnrollment, Address: {
+      update: {
+        ...updatedAddress,
+      }
+    }}
+    
   });
 }
 
