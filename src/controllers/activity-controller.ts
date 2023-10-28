@@ -15,5 +15,5 @@ export async function reserveActivity(req: AuthenticatedRequest,res: Response) {
     const { activityId } = req.params;
 
     const activities = await activitiesService.reserveActivity(userId, Number(activityId));
-    res.status(httpStatus.CREATED).send(activities)
+    res.status(httpStatus.CREATED).send('Reserva feita com sucesso!')
 }

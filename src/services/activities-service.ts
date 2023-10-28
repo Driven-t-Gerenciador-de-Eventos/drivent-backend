@@ -25,9 +25,8 @@ async function getActivities(userId: number) {
   return activities;
 }
 
-async function getActivitiesByUser(userId: number) {
-    const activities = await activitiesRepository.getActivitiesByUser(userId);
-    if (activities.length === 0) throw notFoundError();
+async function getActivitiesByUser(userId: number, date: Date) {
+    const activities = await activitiesRepository.getActivitiesByUser(userId, date);
   
     return activities;
   }
@@ -49,13 +48,16 @@ async function reserveActivity(userId: number, activityId: number) {
     throw conflictError('Atividade sem vagas');
   }
 
-  const userActivities = await getActivitiesByUser(userId);
 
-  const conflictActivity = userActivities.find(userActivity =>
-    userActivity.Activity.startsAt <= activity.endsAt && userActivity.Activity.endsAt >= activity.startsAt
-  );
-  if (conflictActivity) {
-    throw conflictError('Atividades no mesmo horário');
+  const userActivities = await getActivitiesByUser(userId, activity.date);
+
+  if(userActivities){
+    const conflictActivity = userActivities.find(userActivity =>
+      userActivity.Activity.startsAt <= activity.endsAt && userActivity.Activity.endsAt >= activity.startsAt
+    );
+    if (conflictActivity) {
+      throw conflictError('Atividades no mesmo horário');
+    }
   }
 
   const reservation = await activitiesRepository.reserveActivity(userId, activityId);

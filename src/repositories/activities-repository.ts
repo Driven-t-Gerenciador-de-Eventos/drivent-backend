@@ -13,13 +13,20 @@ async function getActivityById(activityId: number) {
   });
 }
 
-async function getActivitiesByUser(userId: number) {
-  return prisma.reservation.findMany({
+async function getActivitiesByUser(userId: number, date: Date) {
+  const reservations = await prisma.reservation.findMany({
     where: {
       userId: userId
     },
     include: {Activity: true},
   });
+
+  const filteredReservations = reservations.filter((reservation) => {
+    const activity = reservation.Activity;
+    return activity.date.toDateString() === date.toDateString();
+  });
+
+  return filteredReservations;
 }
 
 async function reserveActivity(userId: number, activityId: number) {
