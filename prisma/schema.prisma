@@ -11,14 +11,15 @@ datasource db {
 }
 
 model User {
-  id         Int          @id @default(autoincrement())
-  email      String       @unique @db.VarChar(255)
-  password   String       @db.VarChar(255)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  Session    Session[]
-  Enrollment Enrollment[]
-  Booking    Booking?
+  id          Int          @id @default(autoincrement())
+  email       String       @unique @db.VarChar(255)
+  password    String       @db.VarChar(255)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  Session     Session[]
+  Enrollment  Enrollment[]
+  Booking     Booking?
+  Reservation Reservation[]
 }
 
 model Session {
@@ -137,4 +138,27 @@ model Booking {
   roomId    Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Activity {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(255)
+  place       String    @db.VarChar(255)
+  startsAt    DateTime  @db.Time(0)
+  endsAt      DateTime  @db.Time(0)
+  capacity    Int
+  date        DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  Reservation Reservation[]
+}
+
+model Reservation {
+  id         Int       @id @default(autoincrement())
+  User       User      @relation(fields: [userId], references: [id])
+  userId     Int
+  Activity   Activity  @relation(fields: [activityId], references: [id])
+  activityId Int
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 }
