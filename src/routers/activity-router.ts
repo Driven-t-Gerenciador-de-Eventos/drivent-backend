@@ -6,7 +6,7 @@ const activityRouter = Router();
 
 activityRouter
     .all('/*', authenticateToken)
-    .get('/activity', getActivities)
+    .get('/', getActivities)
     .post('/:activityId', reserveActivity)
 
 

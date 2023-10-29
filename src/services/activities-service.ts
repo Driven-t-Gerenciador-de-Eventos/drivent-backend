@@ -16,18 +16,28 @@ async function validateUserBooking(userId: number) {
   }
 }
 
+function formatarData(data: string) {
+  const dataFormatada = new Date(data).toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: '2-digit'});
+  return dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+}
+
+
 async function getActivities(userId: number) {
   await validateUserBooking(userId);
 
   const activities = await activitiesRepository.findActivities();
   if (activities.length === 0) throw notFoundError();
 
-  return activities;
+  const activitiesWithFormattedDate = activities.map(activity => ({
+    ...activity,
+    formattedDate: formatarData(activity.date),
+  }));
+
+  return activitiesWithFormattedDate;
 }
 
-async function getActivitiesByUser(userId: number) {
-    const activities = await activitiesRepository.getActivitiesByUser(userId);
-    if (activities.length === 0) throw notFoundError();
+async function getActivitiesByUser(userId: number, date: Date) {
+    const activities = await activitiesRepository.getActivitiesByUser(userId, date);
   
     return activities;
   }
@@ -49,13 +59,16 @@ async function reserveActivity(userId: number, activityId: number) {
     throw conflictError('Atividade sem vagas');
   }
 
-  const userActivities = await getActivitiesByUser(userId);
 
-  const conflictActivity = userActivities.find(userActivity =>
-    userActivity.Activity.startsAt <= activity.endsAt && userActivity.Activity.endsAt >= activity.startsAt
-  );
-  if (conflictActivity) {
-    throw conflictError('Atividades no mesmo horário');
+  const userActivities = await getActivitiesByUser(userId, activity.date);
+
+  if(userActivities){
+    const conflictActivity = userActivities.find(userActivity =>
+      userActivity.Activity.startsAt <= activity.endsAt && userActivity.Activity.endsAt >= activity.startsAt
+    );
+    if (conflictActivity) {
+      throw conflictError('Atividades no mesmo horário');
+    }
   }
 
   const reservation = await activitiesRepository.reserveActivity(userId, activityId);
