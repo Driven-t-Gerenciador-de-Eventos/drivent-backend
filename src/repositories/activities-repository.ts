@@ -1,7 +1,29 @@
 import { prisma } from '@/config';
 
-async function findActivities() {
-  return prisma.activity.findMany()
+type Activity = {
+  id: number;
+  name: string;
+  place: string;
+  startsAt: string;
+  endsAt: string;
+  capacity: number;
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+  availableCapacity: number;
+};
+
+
+async function findActivities(): Promise<Activity[]> {
+  return prisma.$queryRaw`
+    SELECT a.*, (a.capacity - COALESCE(r."reservationCount", 0)) as "availableCapacity"
+    FROM "Activity" a
+    LEFT JOIN (
+      SELECT "activityId", COUNT(id) as "reservationCount"
+      FROM "Reservation"
+      GROUP BY "activityId"
+    ) r ON a.id = r."activityId";
+  `;
 }
 
 async function getActivityById(activityId: number) {

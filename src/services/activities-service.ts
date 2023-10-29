@@ -16,13 +16,24 @@ async function validateUserBooking(userId: number) {
   }
 }
 
+function formatarData(data: string) {
+  const dataFormatada = new Date(data).toLocaleDateString('pt-BR', {weekday: 'long', day: '2-digit', month: '2-digit'});
+  return dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+}
+
+
 async function getActivities(userId: number) {
   await validateUserBooking(userId);
 
   const activities = await activitiesRepository.findActivities();
   if (activities.length === 0) throw notFoundError();
 
-  return activities;
+  const activitiesWithFormattedDate = activities.map(activity => ({
+    ...activity,
+    formattedDate: formatarData(activity.date),
+  }));
+
+  return activitiesWithFormattedDate;
 }
 
 async function getActivitiesByUser(userId: number, date: Date) {
