@@ -8,8 +8,8 @@ async function findPaymentByTicketId(ticketId: number) {
   return result;
 }
 
-async function createPayment(ticketId: number, params: PaymentParams) {
-  const result = await prisma.payment.create({
+function createPayment(ticketId: number, params: PaymentParams) {
+  const result = prisma.payment.create({
     data: {
       ticketId,
       ...params,
