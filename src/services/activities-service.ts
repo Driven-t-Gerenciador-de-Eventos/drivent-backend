@@ -25,7 +25,7 @@ function formatarData(data: string) {
 async function getActivities(userId: number) {
   await validateUserBooking(userId);
 
-  const activities = await activitiesRepository.findActivities();
+  const activities = await activitiesRepository.findActivities(userId);
   if (activities.length === 0) throw notFoundError();
 
   const activitiesWithFormattedDate = activities.map(activity => ({
@@ -51,7 +51,6 @@ async function getActivityById(activityId: number){
 
 async function reserveActivity(userId: number, activityId: number) {
   await validateUserBooking(userId);
-
   if (!activityId || isNaN(activityId)) throw invalidDataError('activityId');
 
   const activity = await getActivityById(activityId);
@@ -59,20 +58,19 @@ async function reserveActivity(userId: number, activityId: number) {
     throw conflictError('Atividade sem vagas');
   }
 
-
   const userActivities = await getActivitiesByUser(userId, activity.date);
 
   if(userActivities){
     const conflictActivity = userActivities.find(userActivity =>
       userActivity.Activity.startsAt <= activity.endsAt && userActivity.Activity.endsAt >= activity.startsAt
     );
+    console.log(conflictActivity)
     if (conflictActivity) {
       throw conflictError('Atividades no mesmo horário');
     }
   }
 
   const reservation = await activitiesRepository.reserveActivity(userId, activityId);
-
   return reservation.id;
 }
 

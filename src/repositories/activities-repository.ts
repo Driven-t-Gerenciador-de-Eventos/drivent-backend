@@ -11,18 +11,24 @@ type Activity = {
   createdAt: string;
   updatedAt: string;
   availableCapacity: number;
+  isSubscribed: boolean;
 };
 
 
-async function findActivities(): Promise<Activity[]> {
+async function findActivities(userId: number): Promise<Activity[]> {
   return prisma.$queryRaw`
-    SELECT a.*, (a.capacity - COALESCE(r."reservationCount", 0)) as "availableCapacity"
+    SELECT a.*, (a.capacity - COALESCE(r."reservationCount", 0)) as "availableCapacity", CASE WHEN u."userHasReservation" IS NOT NULL THEN true ELSE false END as "isSubscribed"
     FROM "Activity" a
     LEFT JOIN (
       SELECT "activityId", COUNT(id) as "reservationCount"
       FROM "Reservation"
       GROUP BY "activityId"
-    ) r ON a.id = r."activityId";
+    ) r ON a.id = r."activityId"
+    LEFT JOIN (
+      SELECT "userId", "activityId", true as "userHasReservation"
+      FROM "Reservation"
+      WHERE "userId" = ${userId}
+    ) u ON a.id = u."activityId";
   `;
 }
 
@@ -56,7 +62,6 @@ async function reserveActivity(userId: number, activityId: number) {
     data: {userId, activityId},
   });
 }
-
 
 export const activitiesRepository = {
   findActivities,
