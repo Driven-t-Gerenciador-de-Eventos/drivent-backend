@@ -62,15 +62,8 @@ async function createOrUpdateEnrollmentWithAddress(params: CreateOrUpdateEnrollm
     updatedAddress: UpdateAddressParams
   }
 
-  const newEnrollment = enrollmentRepository.upsert(params.userId, enrollment, exclude(enrollment, 'userId'));
-  const upsertAdress = (data: UpsertData) => addressRepository.upsert(data.id, data.createdAddress, data.updatedAddress);
-
-  try {
-    await prisma.$transaction([newEnrollment, upsertAdress({id: (await newEnrollment).id, createdAddress: address, updatedAddress: address})]);
-  } catch (error) {
-    console.log(error)
-  };
-
+  const newEnrollment = await enrollmentRepository.upsertEnrollmentWithAddress(params.userId, enrollment, exclude(enrollment, 'userId'), address, address);
+  //nested write instead of transaction, because the queries are sequential/dependent
 }
 
 function getAddressForUpsert(address: CreateAddressParams) {

@@ -11,7 +11,7 @@ async function findWithAddressByUserId(userId: number) {
   });
 }
 
-function upsert(
+function upsertEnrollmentWithAddress(
   userId: number,
   createdEnrollment: CreateEnrollmentParams,
   updatedEnrollment: UpdateEnrollmentParams,
@@ -22,17 +22,20 @@ function upsert(
     where: {
       userId,
     },
-    create: {createdEnrollment, Address: {
+    create: {...createdEnrollment, Address: {
       create: {
         ...createdAddress,
       }
     }},
-    update: {updatedEnrollment, Address: {
-      update: {
-        ...updatedAddress,
+    update: {...updatedEnrollment, Address: {
+      upsert: {
+        where: {
+          enrollmentId:  userId,
+        },
+        create: createdAddress,
+        update: updatedAddress
       }
     }}
-    
   });
 }
 
@@ -41,5 +44,5 @@ export type UpdateEnrollmentParams = Omit<CreateEnrollmentParams, 'userId'>;
 
 export const enrollmentRepository = {
   findWithAddressByUserId,
-  upsert,
+  upsertEnrollmentWithAddress,
 };

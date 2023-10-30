@@ -36,8 +36,8 @@ async function paymentProcess(ticketId: number, userId: number, cardData: CardPa
 
   const payment = paymentsRepository.createPayment(ticketId, paymentData);
   const processPayment = ticketsRepository.ticketProcessPayment(ticketId);
-  //transaction na camada de service pois são independentes
-
+  //transaction in service, queries are independent
+  
   try {
     await prisma.$transaction([payment, processPayment]);
   } catch (error) {
